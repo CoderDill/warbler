@@ -66,6 +66,8 @@ def signup():
     """
 
     form = UserAddForm()
+    if CURR_USER_KEY in session:
+        del session[CURR_USER_KEY]
 
     if form.validate_on_submit():
         try:
@@ -78,7 +80,7 @@ def signup():
             db.session.commit()
 
         except IntegrityError:
-            flash("Username already taken", 'danger')
+            flash("Username already taken or Email already used.", 'danger')
             return render_template('users/signup.html', form=form)
 
         do_login(user)
@@ -222,17 +224,19 @@ def profile():
     form = UserEditForm()
 
     if form.validate_on_submit():
-        user.username = form.username.data
-        user.email = form.email.data
-        user.image_url = form.image_url.data
-        user.header_image_url = form.header_image_url.data
-        user.bio = form.bio.data
-        user.password = form.password.data
-        user.location = form.location.data
+        if User.authenticate(user.username, form.password.data):
+            user.username = form.username.data
+            user.email = form.email.data
+            user.image_url = form.image_url.data or "/static/images/default-pic.png"
+            user.header_image_url = form.header_image_url.data or "/static/images/warbler-hero.jpg"
+            user.bio = form.bio.data
+            user.location = form.location.data
 
-        db.session.commit()
-        return redirect(f"/users/{g.user.id}")
-    return render_template("users/edit.html", user=user, form=form)
+            db.session.commit()
+            return redirect(f"/users/{user.id}")
+        flash("Wrong password.", "danger")    
+        
+    return render_template("users/edit.html", user_id=user.id, form=form)
 
 
 @app.route('/users/delete', methods=["POST"])
