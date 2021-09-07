@@ -80,6 +80,20 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
 
+    def test_user_signup(self):
+        test_user = User.signup("testing", "test3@test3.com", "abc123", None)
+        test_user.id = 1111
+        
+        db.session.commit()
+
+        test_user = User.query.get(test_user.id)
+        self.assertIsNotNone(test_user)
+        self.assertEqual(test_user.username, "testing")
+        self.assertEqual(test_user.email, "test3@test3.com")
+        self.assertNotEqual(test_user.password, "abc123")
+        self.assertTrue(test_user.password.startswith('$2b$'))
+
+
     def test_valid_authentication(self):
         u = User.authenticate(self.u0.username, "abc123")
         self.assertIsNotNone(u)
@@ -93,3 +107,14 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(self.u1.following), 0)
         self.assertEqual(len(self.u1.followers), 1)
         self.assertEqual(len(self.u0.followers), 0)
+
+    def test_is_followed_by(self):
+        self.u0.following.append(self.u1)
+
+        self.assertTrue(self.u1.is_followed_by(self.u0))
+
+    def test_is_following(self):
+        self.u0.following.append(self.u1)
+        db.session.commit()
+
+        self.assertTrue(self.u0.is_following(self.u1))
