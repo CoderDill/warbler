@@ -232,6 +232,19 @@ def add_like(message_id):
     db.session.commit()
     return redirect('/')
 
+@app.route("/users/<int:user_id>/likes")
+def show_likes(user_id):
+    """Show likes"""
+    
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    
+    return render_template('users/likes.html', user=user, likes=user.likes)
+
+
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
