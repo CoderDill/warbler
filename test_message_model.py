@@ -2,7 +2,6 @@
 
 import os
 from unittest import TestCase
-from sqlalchemy import exc
 from models import db, Message, User, Likes
 
 #Test db

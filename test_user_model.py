@@ -34,12 +34,35 @@ class UserModelTestCase(TestCase):
 
     def setUp(self):
         """Create test client, add sample data."""
+        db.drop_all()
+        db.create_all()
 
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
 
+        u0 = User.signup("test1", "test1@test.com", "abc123", None)
+        u0.id = 123
+        
+        u1 = User.signup("tester2", "tester2@tester.com", "123abc", None)
+        u1.id = 456
+
+        db.session.commit()
+
+        u0 = User.query.get(u0.id)
+        u1 = User.query.get(u1.id)
+
+        self.u0 = u0
+        self.uid0 = u0.id
+        self.u1 = u1
+        self.uid1 = u1.id
+
         self.client = app.test_client()
+
+    def tearDown(self):
+        res = super().tearDown()
+        db.session.rollback()
+        return res
 
     def test_user_model(self):
         """Does basic model work?"""
@@ -56,3 +79,17 @@ class UserModelTestCase(TestCase):
         # User should have no messages & no followers
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
+
+    def test_valid_authentication(self):
+        u = User.authenticate(self.u0.username, "abc123")
+        self.assertIsNotNone(u)
+        self.assertEqual(u.id, self.uid0)
+
+    def test_user_follows(self):
+        self.u0.following.append(self.u1)
+        db.session.commit()
+
+        self.assertEqual(len(self.u0.following), 1)
+        self.assertEqual(len(self.u1.following), 0)
+        self.assertEqual(len(self.u1.followers), 1)
+        self.assertEqual(len(self.u0.followers), 0)

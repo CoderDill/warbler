@@ -48,7 +48,7 @@ class MessageViewTestCase(TestCase):
                                     email="test@test.com",
                                     password="testuser",
                                     image_url=None)
-
+        self.testuser.id = 1234
         db.session.commit()
 
     def test_add_message(self):
