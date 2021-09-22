@@ -132,7 +132,7 @@ def list_users():
     """
 
     search = request.args.get('q')
-    pdb
+    
     if not search:
         users = User.query.all()
     else:
